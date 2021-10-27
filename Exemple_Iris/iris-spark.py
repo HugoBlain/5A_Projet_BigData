@@ -52,7 +52,7 @@ k = 3 # TODO: test several k, elbow method
 kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
 model = kmeans_algo.fit(iris_with_features)
 centers = model.clusterCenters()
-# Assign clusters to flowers
+# Assign clusters to flower
 iris_with_clusters = model.transform(iris_with_features)
 
 print("Centers", centers)

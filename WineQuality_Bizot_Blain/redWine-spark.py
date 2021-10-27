@@ -19,7 +19,7 @@ import pandas as pd
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.feature import VectorAssembler
 from pyspark.sql import SQLContext, SparkSession
-from pyspark.sql.types import StructType, StructField, FloatType, StringType
+from pyspark.sql.types import StructType, StructField, FloatType, StringType, IntegerType
 from pyspark.mllib.linalg.distributed import RowMatrix
 
 # lancement de spark
@@ -30,7 +30,7 @@ spark = SparkSession\
 sqlContext = SQLContext(sparkContext = spark.sparkContext, sparkSession = spark)
 
 # chargement des données du dataSet
-nullable = True
+nullable = False
 schema = StructType([
     StructField("fixed_acidity", FloatType(), nullable),
     StructField("volatile_acidity", FloatType(), nullable),
@@ -45,10 +45,21 @@ schema = StructType([
     StructField("alcohol", FloatType(), nullable),
     StructField("quality", IntegerType(), nullable),
 ])
-RedWineQuality = sqlContext.read.csv('winequality-red.csv', header = False, schema = schema)
+redWineQuality = sqlContext.read.csv('winequality-red.csv', header = False, schema = schema)
 
 # répartition en colonne
 vecAssembler = VectorAssembler(
     inputCols=['fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar', 'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide','density', 'ph', 'sulphates', 'alcohol', 'quality'],
     outputCol="features")
-iris_with_features = vecAssembler.transform(iris)
+redWineQuality_with_features = vecAssembler.transform(redWineQuality)
+
+
+# K-means
+k = 3
+kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
+#model = kmeans_algo.fit(redWineQuality_with_features)
+#centers = model.clusterCenters()
+# clusters
+#redWineQuality_with_clusters = model.transform(redWineQuality_with_features)
+
+print("Fin")
