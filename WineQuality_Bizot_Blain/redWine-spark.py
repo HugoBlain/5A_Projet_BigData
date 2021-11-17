@@ -1,17 +1,5 @@
-# install spark https://spark.apache.org/downloads.html
-#
-#    pip install pyspark
-# 
-# pour windows https://medium.com/big-data-engineering/how-to-install-apache-spark-2-x-in-your-pc-e2047246ffc3
-#
-# run with python like
-#
-#    python -i iris-spark.py
-#
-# "-i" option is for interactive mode
-# 
-# It should allow you to experiment in the python REPL
-# without need to re-run all this every time
+# Doc Kmeans :
+# --> https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.ml.clustering.KMeans.html
 
 
 import matplotlib.pyplot as plt
@@ -22,15 +10,16 @@ from pyspark.sql import SQLContext, SparkSession
 from pyspark.sql.types import StructType, StructField, FloatType, StringType, IntegerType
 from pyspark.mllib.linalg.distributed import RowMatrix
 
+
 # lancement de spark
 spark = SparkSession\
         .builder\
         .appName("RedWine_App")\
         .getOrCreate()
-sqlContext = SQLContext(sparkContext = spark.sparkContext, sparkSession = spark)
 
-# chargement des données du dataSet
-nullable = False
+
+# déclaration de StructType
+nullable = True
 schema = StructType([
     StructField("fixed_acidity", FloatType(), nullable),
     StructField("volatile_acidity", FloatType(), nullable),
@@ -45,21 +34,45 @@ schema = StructType([
     StructField("alcohol", FloatType(), nullable),
     StructField("quality", IntegerType(), nullable),
 ])
-redWineQuality = sqlContext.read.csv('winequality-red.csv', header = False, schema = schema)
 
-# répartition en colonne
-vecAssembler = VectorAssembler(
-    inputCols=['fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar', 'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide','density', 'ph', 'sulphates', 'alcohol', 'quality'],
-    outputCol="features")
-redWineQuality_with_features = vecAssembler.transform(redWineQuality)
+
+# connection BD
+sqlContext = SQLContext(sparkContext = spark.sparkContext, sparkSession = spark)
+# chargement des données du dataSet sous forme de dataFrame
+# --> Un DataFrame est une collection distribuée de données organisées en colonnes nommées. Il est conceptuellement équivalent à une table dans une base de données relationnelle ou à un bloc de données en R/Python, mais avec des optimisations plus riches sous le capot.
+redWineQuality = sqlContext.read.csv('winequality-red.csv', sep=";", header = False, schema = schema)
+
+
+
+# afficher les colonnes
+#print(redWineQuality.columns)
+# afficher les données
+redWineQuality.select("*").show()
+
+
+
+
+
+
+
+
+
+
+### répartition en colonne
+#vecAssembler = VectorAssembler(
+#    inputCols=['fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar', 'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide','density', 'ph', 'sulphates', 'alcohol', 'quality'],
+#    outputCol="features")
+#redWineQuality_with_features = vecAssembler.transform(redWineQuality)
+
+
 
 
 # K-means
-k = 3
-kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
+#k = 3
+#kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
 #model = kmeans_algo.fit(redWineQuality_with_features)
 #centers = model.clusterCenters()
 # clusters
 #redWineQuality_with_clusters = model.transform(redWineQuality_with_features)
 
-print("Fin")
+print("--> Fin")
