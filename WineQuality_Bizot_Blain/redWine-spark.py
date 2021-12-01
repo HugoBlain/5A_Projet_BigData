@@ -43,10 +43,17 @@ sqlContext = SQLContext(sparkContext = spark.sparkContext, sparkSession = spark)
 redWineQuality = sqlContext.read.csv('winequality-red.csv', sep=";", header = False, schema = schema)
 
 
+
 # afficher les colonnes
 #print(redWineQuality.columns)
 # afficher les données
-#redWineQuality.select("*").show()
+redWineQuality.select("*").show()
+
+
+
+
+
+
 
 
 
