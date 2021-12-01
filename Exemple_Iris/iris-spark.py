@@ -62,7 +62,6 @@ iris_for_viz = iris_with_clusters.toPandas()
 
 # Vizualize
 # Marker styles are calculated from Iris species
-# Marker styles are calculated from Iris species
 setosaI = iris_for_viz['species'] == 'Iris-setosa'
 setosa = iris_for_viz [ setosaI ]
 versicolorI = iris_for_viz['species'] == 'Iris-versicolor'
