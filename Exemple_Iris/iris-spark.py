@@ -78,22 +78,15 @@ fig.scatter(virginica.sepal_l,
              virginica.sepal_w,
              virginica.petal_l,
              c = virginica.prediction.map(colors),
-             marker = 's')
-fig.scatter(versicolor.sepal_l,
-            versicolor.sepal_w,
-            versicolor.petal_l,
-            c = versicolor.prediction.map(colors),
-            marker = 'v')
-fig.scatter(setosa.sepal_l,
-             setosa.sepal_w,
-             setosa.petal_l,
-             c = setosa.prediction.map(colors),
-             marker = 'o')
+             #marker = 's')
+            )   
+
 fig.set_xlabel('sepal l')
 fig.set_ylabel('sepal w')
 fig.set_zlabel('petal l')
 plt.show()
 
+"""
 # Dimenstion reduction. From 4D to 3D
 # by PCA method
 datamatrix =  RowMatrix(iris.select(['sepal_l', 'sepal_w', 'petal_l', 'petal_w']).rdd.map(list))
@@ -176,3 +169,4 @@ fig.scatter(new_X [setosaI],
 fig.set_xlabel('Component 1')
 fig.set_ylabel('Component 2')
 plt.show()
+"""

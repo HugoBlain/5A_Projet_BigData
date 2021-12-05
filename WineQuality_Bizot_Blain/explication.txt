@@ -1,0 +1,12 @@
+on a pris toutes les données pour faire les kmeans (l56). On calcul le kmeans avec toutes
+ces colonnes mais on va afficher que les critères défini l84.
+Pour un seul critère de tri (ici qualité l77), on peut avoir jusqu'à k cluster (l64) au maximum
+mais on peut en avoir moins
+Les couleurs sont attribuées en fonction de la valeur prédiction calculé par le k-means.
+Si la prédiction est égal à 0, alors le point se situera dans le cluster 0 et aura donc la 
+couleur associée au tableau colors (l81), ici red.
+La forme des points est définie par marker (l88)
+
+
+programme: retrouver la qualité en fonction de tous les autres critères et voir si
+ele est la même que celle observée. + faire PCA
