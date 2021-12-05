@@ -1,5 +1,5 @@
-on a pris toutes les données pour faire les kmeans (l56). On calcul le kmeans avec toutes
-ces colonnes mais on va afficher que les critères défini l84.
+on a pris toutes les données pour faire les kmeans (l56). 
+On calcul le kmeans avec toutes ces colonnes mais on va afficher que les critères défini l84.
 Pour un seul critère de tri (ici qualité l77), on peut avoir jusqu'à k cluster (l64) au maximum
 mais on peut en avoir moins
 Les couleurs sont attribuées en fonction de la valeur prédiction calculé par le k-means.
