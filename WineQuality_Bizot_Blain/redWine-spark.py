@@ -5,15 +5,21 @@
 # --> Un DataFrame est une collection distribuée de données organisées en colonnes nommées. Il est conceptuellement équivalent à une table dans une base de données relationnelle ou à un bloc de données en R/Python, mais avec des optimisations plus riches sous le capot.
 # --> https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
 
+# Optimisation du choix du k
+# --> https://medium.com/analytics-vidhya/how-to-determine-the-optimal-k-for-k-means-708505d204eb
 
+from pyspark.ml import clustering
+from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pyspark.ml.clustering import KMeans
+from pyspark.ml.clustering import ClusteringSummary, KMeans
 from pyspark.ml.feature import VectorAssembler
 from pyspark.sql import SQLContext, SparkSession
 from pyspark.sql.types import StructType, StructField, FloatType, StringType, IntegerType
 from pyspark.mllib.linalg.distributed import RowMatrix
+from pyspark.ml.evaluation import ClusteringEvaluator
+
 
 
 # lancement de spark
@@ -54,6 +60,96 @@ redWine_dataFrame = sqlContext.read.csv('winequality-red.csv', sep=";", header =
 print("\nDataFrame initial (", redWine_dataFrame.select("*").count(), ") lignes :")
 redWine_dataFrame.select("*").limit(5).show()
 
+
+
+print("\Partie Visualisation 3D :\n##################################################################################################")
+
+# création de la colonne "features" (assemblage des données numériques)
+# --> inputs = 'fixed_acidity', 'ph', 'alcohol''
+# --> outputs = "features"
+vecAssembler = VectorAssembler(
+    inputCols=['fixed_acidity', 'ph', 'alcohol'],
+   outputCol="features")
+redWine_with_features = vecAssembler.transform(redWine_dataFrame).select('fixed_acidity', 'ph', 'alcohol', 'features')
+
+
+# optimisation du k choisis : on teste avec plusieurs valeur de k et on regarde laqeulle donne le plus de résultats
+# --> technique de la silhouette
+silhouette_liste = []
+kmax = 10
+
+for k in range(2, kmax+1) :
+    # entrainement
+    kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
+    model = kmeans_algo.fit(redWine_with_features)
+    centers = model.clusterCenters()
+    # faire les prédictions
+    prediction = model.transform(redWine_with_features)
+    # evaluation des clusters en calculant le score de la silhouette
+    evaluator = ClusteringEvaluator()
+    silhouette = evaluator.evaluate(prediction)
+    silhouette_liste.append(silhouette)
+    
+      
+
+
+"""
+
+# K-means
+k = 3
+kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
+model = kmeans_algo.fit(redWine_with_features)
+centers = model.clusterCenters()
+
+
+# afficher le dataFrame avec la nouvelle colonne "features" 
+print("\nDataFrame utilisé pour le KMeans :")
+redWine_with_features.select("*").limit(5).show()
+
+
+# Coordonnées des centres des clusters
+print("\nCentres des clusters :")
+for center in centers:
+    print(center)
+
+
+# assigner chaque ligne (chaque vin) à un cluster
+# --> pour la suite nous n'avons plus besoin de la colonne "features"
+redWine_with_clusters = model.transform(redWine_with_features).select('fixed_acidity', 'ph', 'alcohol', 'prediction')
+
+
+# afficher dataFrame avec la prédiction
+print("\nDataFrame avec les prédictions :")
+redWine_with_clusters.select("*").limit(5).show()
+
+
+# convertir le dataFrame Spark en dataFrame Pandas
+redWine_for_viz = redWine_with_clusters.toPandas()
+
+
+#couleurs
+colors = {0:'red', 1:'green', 2:'blue'}
+
+
+fig = plt.figure().gca(projection='3d')
+fig.scatter(redWine_for_viz.fixed_acidity,
+             redWine_for_viz.ph,
+             redWine_for_viz.alcohol,
+             c = redWine_for_viz.prediction.map(colors),
+             marker = 's'
+            )
+
+fig.set_xlabel('fixed_acidity')
+fig.set_zlabel('ph')
+fig.set_ylabel('alcohol')
+plt.show()
+
+"""
+
+print("##################################################################################################")
+
+
+"""
 
 # création de la colonne "features" (assemblage des données numériques)
 # --> inputs = toutes sauf "id" et "quality"
@@ -107,17 +203,24 @@ pandas_dataFrame = dataFrame_prediction.toPandas()
 
 tab = np.zeros((11, 11))
 
+quality = np.zeros(11)
+prediction = np.zeros(11)
+
 for index, row in pandas_dataFrame.iterrows():
     # recupérer les infos
     q = int(row["quality"])
     p = int(row["prediction"])
+    # compteur
+    quality[q] += 1
+    prediction[p] += 1
     # tableau pour visualiser la répartition
-    tab[q, p] += 1
+    tab[p, q] += 1
+
 
 print("Nombre de vin noté 6 : ", tab[6].sum())
-print("La pluspart ont été rangé dans le cluster n ", np.where(tab[6] == tab[6].max()), " soit ", tab[6].max(), " vins")
 
-
+print("\nQualité : ", quality)
+print("\nPrédict : ", prediction, "\n")
 
 fig = plt.figure(figsize=(11, 11))
 plt.imshow(tab)
@@ -127,26 +230,7 @@ plt.xlabel("Quality")
 plt.ylabel("Prediction")
 plt.show()
 
-
 """
-for index, row in pandas_dataFrame.iterrows():
-
-    quality = np.zeros(11)
-    prediction = np.zeros(11)
-
-    # recupérer les infos
-    q = int(row["quality"])
-    p = int(row["prediction"])
-    # compteur le nombre de vins dans chaque qualité et clusters
-    quality[q] += 1
-    prediction[p] += 1
-    # tableau pour visualiser la répartition
-    tab[q, p] += 1
-
-print("\nQualité " , quality)
-print("Predict " , prediction, "\n\n")
-"""
-
 
 
 
