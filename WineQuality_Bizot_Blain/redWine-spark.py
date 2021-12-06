@@ -8,6 +8,7 @@
 # Optimisation du choix du k
 # --> https://medium.com/analytics-vidhya/how-to-determine-the-optimal-k-for-k-means-708505d204eb
 
+
 from pyspark.ml import clustering
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
@@ -21,13 +22,11 @@ from pyspark.mllib.linalg.distributed import RowMatrix
 from pyspark.ml.evaluation import ClusteringEvaluator
 
 
-
 # lancement de spark
 spark = SparkSession\
         .builder\
         .appName("RedWine_App")\
         .getOrCreate()
-
 
 # déclaration de StructType
 nullable = True
@@ -47,22 +46,19 @@ schema = StructType([
     StructField("quality", IntegerType(), nullable),
 ])
 
-
 # connection à la base de données
 sqlContext = SQLContext(sparkContext = spark.sparkContext, sparkSession = spark)
-
 
 # Charger les données en dataFrame spark
 redWine_dataFrame = sqlContext.read.csv('winequality-red.csv', sep=";", header = False, schema = schema)
 
-
 # afficher dataframe initial
-print("\nDataFrame initial (", redWine_dataFrame.select("*").count(), ") lignes :")
+print("\n\nDataFrame initial (", redWine_dataFrame.select("*").count(), ") lignes :")
 redWine_dataFrame.select("*").limit(5).show()
 
 
 
-print("\Partie Visualisation 3D :\n##################################################################################################")
+print("\n\n1ère partie : Visualisation 3D :\n##################################################################################################\n")
 
 # création de la colonne "features" (assemblage des données numériques)
 # --> inputs = 'fixed_acidity', 'ph', 'alcohol''
@@ -73,12 +69,15 @@ vecAssembler = VectorAssembler(
 redWine_with_features = vecAssembler.transform(redWine_dataFrame).select('fixed_acidity', 'ph', 'alcohol', 'features')
 
 
-# optimisation du k choisis : on teste avec plusieurs valeur de k et on regarde laqeulle donne le plus de résultats
+# optimisation du k choisis : on teste avec plusieurs valeur de k et on regarde laqeulle donne le meilleur résultat
 # --> technique de la silhouette
-silhouette_liste = []
-kmax = 10
+k_max = 10
+k_min = 2
+silhouette_list = []
+k_list = np.arange(k_min, k_max + 1)
 
-for k in range(2, kmax+1) :
+print("Début recherche du k optimal : ")
+for k in range(k_min, k_max + 1):
     # entrainement
     kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
     model = kmeans_algo.fit(redWine_with_features)
@@ -88,15 +87,18 @@ for k in range(2, kmax+1) :
     # evaluation des clusters en calculant le score de la silhouette
     evaluator = ClusteringEvaluator()
     silhouette = evaluator.evaluate(prediction)
-    silhouette_liste.append(silhouette)
-    
-      
+    silhouette_list.append(silhouette)
+    print("    Score pour k =", k, ":", silhouette)
 
-
-"""
+# afficher les différentes valeurs de k et leur score
+plt.plot(k_list, silhouette_list)
+plt.xlabel("K")
+plt.ylabel("Silhoutte Score")
+plt.show()
+     
 
 # K-means
-k = 3
+k = 2
 kmeans_algo = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
 model = kmeans_algo.fit(redWine_with_features)
 centers = model.clusterCenters()
@@ -113,7 +115,7 @@ for center in centers:
     print(center)
 
 
-# assigner chaque ligne (chaque vin) à un cluster
+# assigner chaque ligne (chaque vin) à un cluster (prediction)
 # --> pour la suite nous n'avons plus besoin de la colonne "features"
 redWine_with_clusters = model.transform(redWine_with_features).select('fixed_acidity', 'ph', 'alcohol', 'prediction')
 
@@ -128,7 +130,7 @@ redWine_for_viz = redWine_with_clusters.toPandas()
 
 
 #couleurs
-colors = {0:'red', 1:'green', 2:'blue'}
+colors = {0:'red', 1:'green', 2:'blue', 3:'purple', 4:'yellow'}
 
 
 fig = plt.figure().gca(projection='3d')
@@ -144,12 +146,10 @@ fig.set_zlabel('ph')
 fig.set_ylabel('alcohol')
 plt.show()
 
-"""
-
-print("##################################################################################################")
 
 
-"""
+print("\n2ème partie : Recherche de la qualité\n##################################################################################################\n")
+
 
 # création de la colonne "features" (assemblage des données numériques)
 # --> inputs = toutes sauf "id" et "quality"
@@ -217,7 +217,8 @@ for index, row in pandas_dataFrame.iterrows():
     tab[p, q] += 1
 
 
-print("Nombre de vin noté 6 : ", tab[6].sum())
+print("Nombre de vin noté 6 : ", tab[:,6].sum())
+print("Nombre de vin dans le cluster 6 : ", tab[6].sum())
 
 print("\nQualité : ", quality)
 print("\nPrédict : ", prediction, "\n")
@@ -230,35 +231,5 @@ plt.xlabel("Quality")
 plt.ylabel("Prediction")
 plt.show()
 
-"""
 
 
-
-
-
-
-"""
-
-
-#visualisation
-high_qualityI = redWine_for_viz['quality'] == 7
-high_quality = redWine_for_viz [ high_qualityI ]
-
-#couleurs
-colors = {0:'red', 1:'green', 2:'blue'}
-
-fig = plt.figure().gca(projection='3d')
-fig.scatter(high_quality.ph,
-             high_quality.chlorides,
-             high_quality.alcohol,
-             c = high_quality.prediction.map(colors),
-             marker = 's')
-
-
-fig.set_xlabel('ph')
-fig.set_ylabel('chlorides')
-fig.set_zlabel('alcohol')
-plt.show()
-
-print("--> Fin")
-"""
