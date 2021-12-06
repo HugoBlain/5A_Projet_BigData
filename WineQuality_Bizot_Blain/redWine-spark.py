@@ -107,28 +107,47 @@ pandas_dataFrame = dataFrame_prediction.toPandas()
 
 tab = np.zeros((11, 11))
 
-quality = np.zeros(11)
-prediction = np.zeros(11)
-
 for index, row in pandas_dataFrame.iterrows():
+    # recupérer les infos
     q = int(row["quality"])
     p = int(row["prediction"])
-    quality[q] += 1
-    prediction[p] += 1
+    # tableau pour visualiser la répartition
     tab[q, p] += 1
 
-print("Qualité " , quality)
-print("Predict " , prediction)
+print("Nombre de vin noté 6 : ", tab[6].sum())
+print("La pluspart ont été rangé dans le cluster n ", np.where(tab[6] == tab[6].max()), " soit ", tab[6].max(), " vins")
 
 
-"""
+
 fig = plt.figure(figsize=(11, 11))
 plt.imshow(tab)
 plt.title("Quality / Prédiction")
+plt.colorbar()
 plt.xlabel("Quality")
 plt.ylabel("Prediction")
 plt.show()
+
+
 """
+for index, row in pandas_dataFrame.iterrows():
+
+    quality = np.zeros(11)
+    prediction = np.zeros(11)
+
+    # recupérer les infos
+    q = int(row["quality"])
+    p = int(row["prediction"])
+    # compteur le nombre de vins dans chaque qualité et clusters
+    quality[q] += 1
+    prediction[p] += 1
+    # tableau pour visualiser la répartition
+    tab[q, p] += 1
+
+print("\nQualité " , quality)
+print("Predict " , prediction, "\n\n")
+"""
+
+
 
 
 
